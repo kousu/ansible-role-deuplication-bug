@@ -106,3 +106,89 @@ localhost                  : ok=12   changed=0    unreachable=0    failed=0    s
 ```
 
 That is, the line that "should only run *once*" actually runs twice. Which is actually even more confusing because it's included three times, so the de-duplication logic seems to be *partially* working.
+
+After upgrading to ansible 2.11 as per instructions in https://github.com/ansible/ansible/issues/56046#issuecomment-889418109,
+
+```
+pip uninstall -y ansible ansible-base
+pip install ansible
+```
+
+the bug is **still there**:
+
+
+```
+$ ansible-playbook --version
+[DEPRECATION WARNING]: Ansible will require Python 3.8 or newer on the controller starting with Ansible 2.12. Current version: 3.6.9 (default, Jan 26
+ 2021, 15:33:00) [GCC 8.4.0]. This feature will be removed from ansible-core in version 2.12. Deprecation warnings can be disabled by setting
+deprecation_warnings=False in ansible.cfg.
+ansible-playbook [core 2.11.6]
+  config file = /home/kousu/src/neuropoly/reproducer/ansible.cfg
+  configured module search path = ['/home/kousu/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /home/kousu/.local/lib/python3.6/site-packages/ansible
+  ansible collection location = /home/kousu/.ansible/collections:/usr/share/ansible/collections
+  executable location = /home/kousu/.local/bin/ansible-playbook
+  python version = 3.6.9 (default, Jan 26 2021, 15:33:00) [GCC 8.4.0]
+  jinja version = 3.0.2
+  libyaml = True
+
+$ ansible-playbook site.yml 
+[DEPRECATION WARNING]: Ansible will require Python 3.8 or newer on the controller starting with Ansible 2.12. Current version: 3.6.9 (default, Jan 26
+ 2021, 15:33:00) [GCC 8.4.0]. This feature will be removed from ansible-core in version 2.12. Deprecation warnings can be disabled by setting 
+deprecation_warnings=False in ansible.cfg.
+
+PLAY [base] ******************************************************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************************************************
+ok: [localhost]
+
+TASK [mailer : debug] ********************************************************************************************************************************
+ok: [localhost] => {
+    "msg": "This is roles/mailer running at 1637880808. According to https://github.com/s-hertel/ansible/blob/cb44698afdc68b605950b0ce69aeae746fdc30cc/docs/docsite/rst/user_guide/playbooks_reuse_roles.rst#running-role-dependencies-multiple-times-in-one-playbook, I should only run *once*."
+}
+
+TASK [mailer : Install mail software] ****************************************************************************************************************
+ok: [localhost] => {
+    "msg": "apt: name: - opensmtpd - mailutils state: present"
+}
+
+TASK [mailer : Forward mail to sysadmins] ************************************************************************************************************
+ok: [localhost]
+
+TASK [base : software] *******************************************************************************************************************************
+ok: [localhost] => {
+    "msg": "apt: name: - sudo - etckeeper - ethtool state: present install_recommends: no"
+}
+
+TASK [base : Replace a localhost entry with our own] *************************************************************************************************
+ok: [localhost]
+
+TASK [base : Timezone] *******************************************************************************************************************************
+ok: [localhost]
+
+PLAY [localhost] *************************************************************************************************************************************
+
+TASK [Gathering Facts] *******************************************************************************************************************************
+ok: [localhost]
+
+TASK [mailer : debug] ********************************************************************************************************************************
+ok: [localhost] => {
+    "msg": "This is roles/mailer running at 1637880814. According to https://github.com/s-hertel/ansible/blob/cb44698afdc68b605950b0ce69aeae746fdc30cc/docs/docsite/rst/user_guide/playbooks_reuse_roles.rst#running-role-dependencies-multiple-times-in-one-playbook, I should only run *once*."
+}
+
+TASK [mailer : Install mail software] ****************************************************************************************************************
+ok: [localhost] => {
+    "msg": "apt: name: - opensmtpd - mailutils state: present"
+}
+
+TASK [mailer : Forward mail to sysadmins] ************************************************************************************************************
+ok: [localhost]
+
+TASK [monitor : Install nginx] ***********************************************************************************************************************
+ok: [localhost] => {
+    "msg": "apt: name: - nginx state: present"
+}
+
+PLAY RECAP *******************************************************************************************************************************************
+localhost                  : ok=12   changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+```
