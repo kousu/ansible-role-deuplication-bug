@@ -1,0 +1,22 @@
+- name: software
+  debug:
+    msg: "apt: name: - sudo - etckeeper - ethtool state: present install_recommends: no" 
+
+- name: Hostname
+  block:
+    - name: Replace a localhost entry with our own
+      ansible.builtin.lineinfile:
+        # this is in /tmp for the demo; the real version uses /etc/hosts
+        path: /tmp/hosts
+        create: yes
+        regexp: '^127\.0\.1\.1'  # so pre-existing entry will be removed
+        line: "127.0.1.1	{{ ansible_host.split('.')[0] }} {{ ansible_host }}"
+        mode: '0644'
+      ignore_errors: yes
+
+- name: Timezone
+  file:
+    src: /usr/share/zoneinfo/America/Montreal
+    # ditto: the real version uses /etc/localtime
+    dest: /tmp/localtime
+    state: link

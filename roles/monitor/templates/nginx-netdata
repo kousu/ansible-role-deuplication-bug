@@ -1,0 +1,44 @@
+
+upstream netdata {
+    server 127.0.0.1:19999;
+    keepalive 64;
+}
+
+
+## enforce https
+# $$ *DISABLED*: we have an internal CA, so users get cert warnings if this is turned on.
+#  For child netdatas, on servers where we can control the CAs easily, it's okay to use https
+#  but we can't realistically force it for users.
+#server {
+#	listen 80 default_server;
+#	listen [::]:80 default_server;
+#
+#        # this is the only server { } we run on port 80, so all http connections get rewritten to https ones
+#        # ($host is pulled from the client's request, along with $request_uri, so this line works for *any* virtual host we care to make)
+#        location / {
+#            return 301 https://$host$request_uri;
+#        }
+#}
+
+
+server {
+	server_name _;
+
+	include "snippets/ssl.conf";
+
+	# forward everything to netdata
+	location / {
+		proxy_redirect off;
+		proxy_set_header Host $host;
+
+		proxy_set_header X-Forwarded-Host $host;
+		proxy_set_header X-Forwarded-Server $host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_http_version 1.1;
+		proxy_pass_request_headers on;
+		proxy_set_header Connection "keep-alive";
+		proxy_store off;
+		proxy_pass https://netdata; # netdata auto-upgrades all connections to https, so ironically we need to talk to it over https!
+	}
+
+}

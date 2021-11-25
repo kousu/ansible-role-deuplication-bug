@@ -1,0 +1,3 @@
+dependencies:
+  - role: mailer
+  #- role: jnv.unattended-upgrades # in my full repo, I'm using this ansible-galaxy role

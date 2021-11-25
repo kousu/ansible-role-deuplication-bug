@@ -1,0 +1,4 @@
+---
+dependencies:
+  #- role: netdata # in the real repo, we have a role to install netdata
+  - role: mailer   # and we install 'mailer' so it can send us notifications; they aren't mandatorily enabled by the netdata role

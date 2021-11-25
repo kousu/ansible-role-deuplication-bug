@@ -1,0 +1,3 @@
+- name: Install nginx
+  debug:
+    msg: "apt: name: - nginx state: present"

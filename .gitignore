@@ -1,0 +1,6 @@
+# dumping ground for transfering certs around
+certs/
+
+# for a copy of or a script to get the vault password
+# see README.md
+.vaultpass

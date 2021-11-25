@@ -1,0 +1,13 @@
+- debug:
+    msg: "This is roles/mailer running at {{ansible_date_time.epoch}}. According to https://github.com/s-hertel/ansible/blob/cb44698afdc68b605950b0ce69aeae746fdc30cc/docs/docsite/rst/user_guide/playbooks_reuse_roles.rst#running-role-dependencies-multiple-times-in-one-playbook, I should only run *once*."
+
+- name: Install mail software
+  debug:
+    msg: "apt: name: - opensmtpd - mailutils state: present"
+
+- name: Forward mail to sysadmins
+  template:
+    src: 'forward.j2'
+    # this is in /tmp for the demo; the real version uses /root.
+    dest: /tmp/.forward
+    mode: 0640
